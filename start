@@ -1,0 +1,65 @@
+sudo apt install build-essential git
+sudo apt install libpcre3 libpcre3-dev libssl-dev zlib1g-dev
+
+
+git clone https://github.com/sergey-dryabzhinsky/nginx-rtmp-module.git
+wget http://nginx.org/download/nginx-1.18.0.tar.gz
+tar -xf nginx-1.18.0.tar.gz
+cd nginx-1.18.0
+./configure --with-http_ssl_module --add-module=../nginx-rtmp-module --with-file-aio
+
+make -j 1
+sudo make install
+
+vi /usr/local/nginx/conf/nginx.conf
+
+# RTMP configuration
+rtmp {
+    server {
+        listen 1935; # Listen on standard RTMP port
+        chunk_size 4000;
+
+        application show {
+            live on;
+            # Turn on HLS
+            hls on;
+            hls_path /mnt/hls/;
+            hls_fragment 3;
+            hls_playlist_length 60;
+            # disable consuming the stream from nginx as rtmp
+            #deny play all;
+        }
+    }
+}
+/usr/local/nginx/sbin/nginx
+
+rtmp://47.99.178.93:1935/show
+
+<head>
+	  <meta charset="utf-8">
+	    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	      <meta name="apple-mobile-web-app-capable" content="yes">
+	        <meta name="viewport" content="width=device-width, initial-scale=1">
+		  <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet" />
+		    <!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->
+		      <script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js"></script>
+</head>
+
+<body style="background-color: black">
+	  <video
+          id="stream"
+	      class="video-js vjs-default-skin vjs-fluid"
+           controls
+           preload="auto"
+	       poster="stream.png"
+	    data-setup="{}"
+         >
+	     <source src="hls/stream.m3u8" type="application/x-mpegURL" />
+		         <p class="vjs-no-js">
+			     To view this video please enable JavaScript, and consider upgrading to a
+			         web browser that
+				     <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+				         </p>
+					   </video>
+					     <script src="https://vjs.zencdn.net/7.10.2/video.js"></script>
+</body>
